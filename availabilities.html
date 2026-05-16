@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tennis Availabilities — Saint Germain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+
+<!--
+  ══════════════════════════════════════════════════════════════════════
+  GOOGLE APPS SCRIPT SETUP
+  ══════════════════════════════════════════════════════════════════════
+
+  STEP 1 — Create a Google Sheet with two tabs:
+
+    Tab "Tournaments" columns (row 1 = headers):
+      A: ID | B: Name | C: Date | D: Location | E: Format | F: Level
+
+    Example rows:
+      t1 | Riverside Park Open      | Sat 24 May | Riverside Park Courts     | Doubles | All levels
+      t2 | Central Park Classic     | Sun 1 Jun  | Central Park Tennis Ctr   | Mixed   | Intermediate
+      t3 | East River Cup           | Sat 14 Jun | East River Park Courts    | Singles | Advanced
+
+    Tab "Availabilities" columns (row 1 = headers):
+      A: Timestamp | B: Name | C: TournamentID | D: Status
+
+  STEP 2 — Open Extensions → Apps Script, paste this code:
+
+    const SHEET_ID = 'YOUR_GOOGLE_SHEET_ID_HERE'; // from sheet URL
+    const TOURNAMENT_TAB = 'Tournaments';
+    const AVAILABILITY_TAB = 'Availabilities';
+
+    function doGet() {
+      const ss = SpreadsheetApp.openById(SHEET_ID);
+      const tRows = ss.getSheetByName(TOURNAMENT_TAB).getDataRange().getValues();
+      const aRows = ss.getSheetByName(AVAILABILITY_TAB).getDataRange().getValues();
+
+      const tournaments = tRows.slice(1).map(r => ({
+        id: r[0], name: r[1], date: r[2], location: r[3], format: r[4], level: r[5]
+      }));
+      const availabilities = aRows.slice(1).map(r => ({
+        timestamp: r[0], name: r[1], tournamentId: r[2], status: r[3]
+      }));
+
+      return ContentService
+        .createTextOutput(JSON.stringify({ tournaments, availabilities }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    function doPost(e) {
+      const data = JSON.parse(e.postData.contents);
+      const ss = SpreadsheetApp.openById(SHEET_ID);
+      ss.getSheetByName(AVAILABILITY_TAB).appendRow([
+        new Date(), data.name, data.tournamentId, data.status
+      ]);
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+  STEP 3 — Deploy → New deployment:
+    Type: Web app
+    Execute as: Me
+    Who has access: Anyone
+    → Copy the deployment URL
+
+  STEP 4 — Replace 'YOUR_APPS_SCRIPT_URL_HERE' below with that URL.
+  ══════════════════════════════════════════════════════════════════════
+-->
+
+<style>
+  :root {
+    --cream: #F7F3EC;
+    --black: #111010;
+    --gold: #C9A96E;
+    --gold-light: #E8D5B0;
+    --warm-grey: #8C8070;
+    --accent: #2B3A4A;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--cream);
+    color: var(--black);
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.4rem 3rem;
+    background: rgba(247,243,236,0.88);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(201,169,110,0.25);
+  }
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem; font-weight: 600;
+    letter-spacing: 0.25em; text-transform: uppercase;
+    text-decoration: none; color: var(--black);
+  }
+  .nav-links { display: flex; gap: 2.4rem; list-style: none; }
+  .nav-links a {
+    font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase;
+    text-decoration: none; color: var(--black); transition: color 0.3s;
+  }
+  .nav-links a:hover, .nav-links a.active { color: var(--gold); }
+  .nav-social { display: flex; gap: 1.2rem; align-items: center; }
+  .nav-social a { color: var(--black); transition: color 0.3s; }
+  .nav-social a:hover { color: var(--gold); }
+  .nav-social svg { width: 18px; height: 18px; fill: currentColor; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .reveal {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible { opacity: 1; transform: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── PAGE HERO ── */
+  .page-hero {
+    min-height: 55vh;
+    background: var(--accent);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 10rem 2rem 6rem;
+    position: relative; overflow: hidden;
+    color: var(--cream);
+  }
+  .page-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 70% 60% at 50% 50%, rgba(201,169,110,0.12) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 40% at 80% 20%, rgba(247,243,236,0.03) 0%, transparent 60%);
+  }
+  .page-hero-label {
+    position: relative;
+    font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase;
+    color: rgba(201,169,110,0.8); margin-bottom: 1.5rem;
+    animation: fadeUp 0.8s ease both;
+  }
+  .page-hero-title {
+    position: relative;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3.2rem, 9vw, 7rem);
+    font-weight: 300; line-height: 1.0;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+  .page-hero-title em { font-style: italic; color: var(--gold); }
+  .page-hero-desc {
+    position: relative;
+    margin-top: 2rem;
+    font-size: 0.82rem; line-height: 2;
+    color: rgba(247,243,236,0.5);
+    letter-spacing: 0.06em;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  /* ── SECTION COMMONS ── */
+  .section-label {
+    font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 1.2rem;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.4rem, 5vw, 3.8rem);
+    font-weight: 300; line-height: 1.1;
+  }
+  .divider { width: 40px; height: 1px; background: var(--gold); margin: 2rem 0; }
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  /* ── TOURNAMENTS SECTION ── */
+  .tournaments-section { padding: 7rem 3rem; }
+  .tournaments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 2rem; margin-top: 3rem;
+  }
+
+  /* ── TOURNAMENT CARD ── */
+  .tournament-card {
+    background: #fff;
+    border: 1px solid rgba(201,169,110,0.25);
+    padding: 2rem;
+    position: relative;
+    transition: border-color 0.35s, transform 0.35s, box-shadow 0.35s;
+  }
+  .tournament-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(43,58,74,0.08);
+  }
+  .tournament-date-badge {
+    position: absolute; top: -1px; right: 2rem;
+    background: var(--gold); color: var(--black);
+    padding: 0.35rem 0.85rem;
+    font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase;
+    font-weight: 500;
+  }
+  .tournament-level {
+    font-size: 0.58rem; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--warm-grey); margin-bottom: 0.7rem; margin-top: 0.5rem;
+  }
+  .tournament-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem; font-weight: 400;
+    line-height: 1.15; margin-bottom: 1.4rem;
+  }
+  .tournament-meta { display: flex; flex-direction: column; gap: 0.45rem; margin-bottom: 1.5rem; }
+  .tournament-meta-row {
+    display: flex; align-items: center; gap: 0.55rem;
+    font-size: 0.73rem; color: var(--warm-grey); letter-spacing: 0.03em;
+  }
+  .tournament-meta-row svg { width: 13px; height: 13px; fill: var(--gold); flex-shrink: 0; }
+
+  /* Players */
+  .players-section { border-top: 1px solid rgba(201,169,110,0.2); padding-top: 1.3rem; }
+  .players-label {
+    font-size: 0.58rem; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--warm-grey); margin-bottom: 0.9rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .players-count {
+    background: var(--accent); color: var(--gold-light);
+    padding: 0.2rem 0.55rem;
+    font-size: 0.58rem; letter-spacing: 0.12em;
+  }
+  .players-list { display: flex; flex-wrap: wrap; gap: 0.4rem; min-height: 28px; }
+  .player-chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.22rem 0.65rem;
+    font-size: 0.67rem; letter-spacing: 0.02em;
+    border: 1px solid rgba(201,169,110,0.3);
+    background: rgba(201,169,110,0.05);
+  }
+  .player-chip.status-yes  { border-color: rgba(100,180,100,0.45); background: rgba(100,180,100,0.06); }
+  .player-chip.status-maybe{ border-color: rgba(201,169,110,0.55); background: rgba(201,169,110,0.09); }
+  .player-chip.status-no   { border-color: rgba(180,100,100,0.35); background: rgba(180,100,100,0.05); color: var(--warm-grey); }
+  .player-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .status-yes  .player-dot { background: #7bc47b; }
+  .status-maybe .player-dot { background: var(--gold); }
+  .status-no   .player-dot { background: #c47b7b; }
+  .no-players-msg { font-size: 0.7rem; color: var(--warm-grey); font-style: italic; }
+  .add-me-btn {
+    margin-top: 1.2rem; width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    padding: 0.72rem;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase;
+    border: 1px solid rgba(201,169,110,0.5);
+    background: transparent; color: var(--gold);
+    cursor: pointer; transition: all 0.3s;
+  }
+  .add-me-btn:hover { background: var(--gold); color: var(--black); }
+
+  /* ── SETUP BANNER ── */
+  .setup-banner {
+    display: none;
+    margin-top: 2.5rem;
+    border: 1px solid rgba(201,169,110,0.35);
+    background: rgba(201,169,110,0.07);
+    padding: 1.5rem 2rem;
+  }
+  .setup-banner.visible { display: block; }
+  .setup-banner-title {
+    font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 0.7rem;
+  }
+  .setup-banner p { font-size: 0.76rem; line-height: 1.9; color: var(--warm-grey); }
+  .setup-banner code {
+    font-family: 'Courier New', monospace;
+    background: rgba(201,169,110,0.15); padding: 0.1rem 0.4rem;
+    font-size: 0.72rem; color: var(--black);
+  }
+
+  /* ── FORM SECTION ── */
+  .form-section {
+    padding: 7rem 3rem;
+    background: var(--accent);
+    color: var(--cream);
+  }
+  .form-section .section-label { color: rgba(201,169,110,0.75); }
+  .form-section .section-title { color: var(--cream); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.3rem; margin-top: 2.5rem; }
+  .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label {
+    font-size: 0.58rem; letter-spacing: 0.28em; text-transform: uppercase;
+    color: rgba(247,243,236,0.45);
+  }
+  .form-input, .form-select {
+    padding: 0.9rem 1rem;
+    background: rgba(247,243,236,0.05);
+    border: 1px solid rgba(201,169,110,0.28);
+    color: var(--cream);
+    font-family: 'Jost', sans-serif; font-size: 0.82rem; font-weight: 300;
+    letter-spacing: 0.04em; outline: none; width: 100%;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .form-input::placeholder { color: rgba(247,243,236,0.22); }
+  .form-input:focus, .form-select:focus {
+    border-color: var(--gold);
+    background: rgba(247,243,236,0.07);
+  }
+  .form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23C9A96E' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 1rem center;
+    padding-right: 2.5rem; cursor: pointer;
+  }
+  .form-select option { background: var(--accent); color: var(--cream); }
+
+  /* Status radio buttons */
+  .status-options { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+  .status-radio { display: none; }
+  .status-label {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.75rem 1.3rem;
+    border: 1px solid rgba(201,169,110,0.28);
+    cursor: pointer; font-size: 0.72rem; letter-spacing: 0.1em;
+    color: rgba(247,243,236,0.5);
+    transition: all 0.3s; user-select: none;
+  }
+  .status-label:hover { border-color: rgba(201,169,110,0.6); color: var(--cream); }
+  .status-radio:checked + .status-label               { border-color: var(--gold);  color: var(--gold);  }
+  .status-radio:checked + .status-label.label-yes     { border-color: #7bc47b;      color: #7bc47b;      }
+  .status-radio:checked + .status-label.label-no      { border-color: #c47b7b;      color: #c47b7b;      }
+  .status-icon { font-size: 0.95rem; }
+
+  .submit-btn {
+    margin-top: 2.2rem;
+    padding: 1rem 3rem;
+    background: var(--gold); color: var(--black);
+    border: none; cursor: pointer;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.68rem; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 500;
+    transition: all 0.3s;
+  }
+  .submit-btn:hover:not(:disabled) { background: var(--cream); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .form-message {
+    margin-top: 1rem; font-size: 0.75rem; letter-spacing: 0.05em; min-height: 1.2em;
+  }
+  .form-message.success { color: #7bc47b; }
+  .form-message.error   { color: #c47b7b; }
+
+  /* ── LOADING ── */
+  .loading-state {
+    grid-column: 1 / -1;
+    display: flex; align-items: center; justify-content: center; gap: 0.8rem;
+    padding: 4rem; color: var(--warm-grey);
+    font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase;
+  }
+  .spinner {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid rgba(201,169,110,0.2);
+    border-top-color: var(--gold);
+    animation: spin 0.8s linear infinite;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--black); color: var(--cream);
+    padding: 4rem 3rem;
+    display: grid; grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 3rem; align-items: start;
+  }
+  .footer-copy {
+    grid-column: 1 / -1;
+    font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(247,243,236,0.3);
+    padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.08);
+    text-align: center;
+  }
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem; font-weight: 600;
+    letter-spacing: 0.25em; text-transform: uppercase;
+    display: flex; flex-direction: column; gap: 0.3rem;
+  }
+  .footer-logo span {
+    font-size: 0.6rem; letter-spacing: 0.3em; font-weight: 300;
+    color: rgba(247,243,236,0.35); font-family: 'Jost', sans-serif;
+  }
+  .footer-nav { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
+  .footer-nav a {
+    font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase;
+    text-decoration: none; color: rgba(247,243,236,0.5); transition: color 0.3s;
+  }
+  .footer-nav a:hover { color: var(--gold); }
+  .footer-social { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+  .footer-social a { color: rgba(247,243,236,0.5); transition: color 0.3s; }
+  .footer-social a:hover { color: var(--gold); }
+  .footer-social svg { width: 18px; height: 18px; fill: currentColor; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 768px) {
+    nav { padding: 1.2rem 1.5rem; }
+    .nav-links { display: none; }
+    .tournaments-section, .form-section { padding: 5rem 1.5rem; }
+    .tournaments-grid { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: 1; }
+    footer { grid-template-columns: 1fr; gap: 2rem; }
+    .footer-copy { grid-column: 1; }
+    .status-options { flex-direction: column; }
+    .status-label { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">Saint Germain</a>
+  <ul class="nav-links">
+    <li><a href="index.html#about">The Club</a></li>
+    <li><a href="index.html#activities">Activities</a></li>
+    <li><a href="index.html#events">Events</a></li>
+    <li><a href="availabilities.html" class="active">Tennis</a></li>
+    <li><a href="index.html#join">Join</a></li>
+  </ul>
+  <div class="nav-social">
+    <a href="https://www.instagram.com/saintgermainnewyork/" target="_blank" aria-label="Instagram">
+      <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+    </a>
+    <a href="https://wa.me" target="_blank" aria-label="WhatsApp">
+      <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+    </a>
+    <a href="https://partiful.com/e/85IhVbKxmf28Yo9tMhR1" target="_blank" aria-label="Partiful" style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;color:inherit;padding:0.2rem 0.5rem;border:1px solid currentColor;line-height:1.3;">RSVP</a>
+  </div>
+</nav>
+
+<!-- PAGE HERO -->
+<section class="page-hero">
+  <p class="page-hero-label">Tennis · Saint Germain NYC</p>
+  <h1 class="page-hero-title">Tournois<br><em>de Tennis</em></h1>
+  <p class="page-hero-desc">Indiquez vos disponibilités pour les prochains tournois<br>Let the team know which tournaments you can join</p>
+</section>
+
+<!-- TOURNAMENTS -->
+<section class="tournaments-section">
+  <div class="container">
+    <p class="section-label">Upcoming</p>
+    <h2 class="section-title reveal">Tournament<br><em style="font-style:italic;font-family:'Cormorant Garamond',serif;">Schedule</em></h2>
+    <div class="divider"></div>
+    <div id="tournaments-grid" class="tournaments-grid">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <span>Loading tournaments</span>
+      </div>
+    </div>
+    <div id="setup-banner" class="setup-banner">
+      <div class="setup-banner-title">Demo mode active</div>
+      <p>This page is running with placeholder data. To connect it to your Google Sheet, open <code>availabilities.html</code> and follow the setup instructions in the comment at the top of the file, then replace <code>YOUR_APPS_SCRIPT_URL_HERE</code> with your deployed Apps Script URL.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FORM -->
+<section class="form-section" id="add-availability">
+  <div class="container">
+    <p class="section-label">Participate</p>
+    <h2 class="section-title reveal">Add your<br><em style="font-style:italic;font-family:'Cormorant Garamond',serif;">Availability</em></h2>
+    <div class="divider"></div>
+    <p style="font-size:0.82rem;line-height:1.9;color:rgba(247,243,236,0.5);max-width:460px;">
+      Select a tournament and let the team know if you're in — your response will appear on the card right away.
+    </p>
+
+    <form id="availability-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="input-name">Your name</label>
+          <input class="form-input" type="text" id="input-name" placeholder="First Last" required autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="input-tournament">Tournament</label>
+          <select class="form-select" id="input-tournament" required>
+            <option value="" disabled selected>Select a tournament</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Availability</label>
+          <div class="status-options">
+            <input class="status-radio" type="radio" name="status" id="status-yes" value="yes" required>
+            <label class="status-label label-yes" for="status-yes">
+              <span class="status-icon">✓</span> Available
+            </label>
+            <input class="status-radio" type="radio" name="status" id="status-maybe" value="maybe">
+            <label class="status-label" for="status-maybe">
+              <span class="status-icon">?</span> Maybe
+            </label>
+            <input class="status-radio" type="radio" name="status" id="status-no" value="no">
+            <label class="status-label label-no" for="status-no">
+              <span class="status-icon">✗</span> Not available
+            </label>
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="submit-btn" id="submit-btn">Submit Availability</button>
+      <p class="form-message" id="form-message"></p>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-logo">Saint Germain<span>New York Club</span></div>
+    <p style="font-size:0.72rem;line-height:1.9;margin-top:1.2rem;">The French-American international<br>club of New York City.</p>
+  </div>
+  <div>
+    <ul class="footer-nav">
+      <li><a href="index.html#about">The Club</a></li>
+      <li><a href="index.html#activities">Activities</a></li>
+      <li><a href="index.html#events">Events</a></li>
+      <li><a href="availabilities.html">Tennis</a></li>
+      <li><a href="index.html#join">Join</a></li>
+    </ul>
+  </div>
+  <div>
+    <div class="footer-social">
+      <a href="https://www.instagram.com/saintgermainnewyork/" target="_blank" aria-label="Instagram">
+        <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+      </a>
+      <a href="https://partiful.com/e/85IhVbKxmf28Yo9tMhR1" target="_blank" aria-label="Partiful">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+      </a>
+      <a href="https://wa.me" target="_blank" aria-label="WhatsApp">
+        <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+      </a>
+    </div>
+    <p style="font-size:0.65rem;margin-top:1.5rem;line-height:1.8;">New York City<br>contact@saintgermainnyc.com</p>
+  </div>
+  <div class="footer-copy">© 2026 Saint Germain New York Club · All rights reserved</div>
+</footer>
+
+<script>
+// ── CONFIG ── Replace with your deployed Google Apps Script URL ──────
+const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+
+// ── STATE ────────────────────────────────────────────────────────────
+let tournaments = [];
+let availabilities = [];
+
+// ── BOOT ─────────────────────────────────────────────────────────────
+(async function init() {
+  await loadData();
+  renderTournaments();
+  populateTournamentSelect();
+  setupForm();
+  setupReveal();
+})();
+
+// ── DATA ─────────────────────────────────────────────────────────────
+async function loadData() {
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    useDemoData();
+    return;
+  }
+  try {
+    const res = await fetch(APPS_SCRIPT_URL);
+    const data = await res.json();
+    tournaments    = data.tournaments    || [];
+    availabilities = data.availabilities || [];
+  } catch {
+    useDemoData();
+    showError();
+  }
+}
+
+function useDemoData() {
+  tournaments = [
+    { id: 't1', name: 'Riverside Park Open',   date: 'Sat 24 May',  location: 'Riverside Park Courts',      format: 'Doubles',        level: 'All levels'    },
+    { id: 't2', name: 'Central Park Classic',  date: 'Sun 1 Jun',   location: 'Central Park Tennis Center', format: 'Mixed Doubles',  level: 'Intermediate'  },
+    { id: 't3', name: 'East River Cup',         date: 'Sat 14 Jun',  location: 'East River Park Courts',     format: 'Singles',        level: 'Advanced'      },
+  ];
+  availabilities = [
+    { name: 'Sophie M.',  tournamentId: 't1', status: 'yes'   },
+    { name: 'Antoine D.', tournamentId: 't1', status: 'yes'   },
+    { name: 'Camille R.', tournamentId: 't1', status: 'maybe' },
+    { name: 'Pierre L.',  tournamentId: 't2', status: 'yes'   },
+    { name: 'Emma W.',    tournamentId: 't2', status: 'yes'   },
+    { name: 'Lucas B.',   tournamentId: 't2', status: 'maybe' },
+  ];
+  document.getElementById('setup-banner').classList.add('visible');
+}
+
+// ── RENDER TOURNAMENTS ────────────────────────────────────────────────
+function renderTournaments() {
+  const grid = document.getElementById('tournaments-grid');
+  if (!tournaments.length) {
+    grid.innerHTML = '<p style="grid-column:1/-1;font-size:0.78rem;color:var(--warm-grey);font-style:italic;">No upcoming tournaments yet — check back soon.</p>';
+    return;
+  }
+  grid.innerHTML = tournaments.map(t => {
+    const avails      = availabilities.filter(a => a.tournamentId === t.id);
+    const yesGroup    = avails.filter(a => a.status === 'yes');
+    const maybeGroup  = avails.filter(a => a.status === 'maybe');
+    const noGroup     = avails.filter(a => a.status === 'no');
+
+    const chips = [
+      ...yesGroup.map(p   => chip(p.name, 'yes')),
+      ...maybeGroup.map(p => chip(p.name, 'maybe')),
+      ...noGroup.map(p    => chip(p.name, 'no')),
+    ].join('') || '<span class="no-players-msg">Be the first to sign up</span>';
+
+    return `
+      <div class="tournament-card reveal">
+        <div class="tournament-date-badge">${t.date}</div>
+        <div class="tournament-level">${t.level} · ${t.format}</div>
+        <div class="tournament-name">${t.name}</div>
+        <div class="tournament-meta">
+          <div class="tournament-meta-row">
+            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            ${t.location}
+          </div>
+          <div class="tournament-meta-row">
+            <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+            ${t.date}
+          </div>
+        </div>
+        <div class="players-section">
+          <div class="players-label">
+            <span>Players</span>
+            <span class="players-count">${yesGroup.length} available</span>
+          </div>
+          <div class="players-list">${chips}</div>
+          <button class="add-me-btn" onclick="scrollToForm('${t.id}')">+ Add my availability</button>
+        </div>
+      </div>`;
+  }).join('');
+  setupReveal();
+}
+
+function chip(name, status) {
+  return `<span class="player-chip status-${status}"><span class="player-dot"></span>${name}</span>`;
+}
+
+// ── SELECT ────────────────────────────────────────────────────────────
+function populateTournamentSelect() {
+  const select = document.getElementById('input-tournament');
+  select.innerHTML = '<option value="" disabled selected>Select a tournament</option>';
+  tournaments.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value       = t.id;
+    opt.textContent = `${t.name} — ${t.date}`;
+    select.appendChild(opt);
+  });
+}
+
+// ── SCROLL TO FORM ────────────────────────────────────────────────────
+function scrollToForm(tournamentId) {
+  document.getElementById('add-availability').scrollIntoView({ behavior: 'smooth' });
+  setTimeout(() => { document.getElementById('input-tournament').value = tournamentId; }, 600);
+}
+
+// ── FORM SUBMIT ───────────────────────────────────────────────────────
+function setupForm() {
+  document.getElementById('availability-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name         = document.getElementById('input-name').value.trim();
+    const tournamentId = document.getElementById('input-tournament').value;
+    const status       = document.querySelector('input[name="status"]:checked')?.value;
+    if (!name || !tournamentId || !status) return;
+
+    const btn = document.getElementById('submit-btn');
+    const msg = document.getElementById('form-message');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    msg.textContent = '';
+    msg.className = 'form-message';
+
+    try {
+      if (APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+        await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, tournamentId, status }),
+        });
+      }
+      availabilities.push({ name, tournamentId, status });
+      renderTournaments();
+      e.target.reset();
+      msg.textContent = APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE'
+        ? '✓ Added locally (demo — not saved to sheet)'
+        : '✓ Your availability has been saved!';
+      msg.className = 'form-message success';
+    } catch {
+      msg.textContent = '✗ Something went wrong. Please try again.';
+      msg.className = 'form-message error';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Submit Availability';
+    }
+  });
+}
+
+function showError() {
+  document.getElementById('tournaments-grid').innerHTML =
+    '<p style="grid-column:1/-1;font-size:0.78rem;color:#c47b7b;">Could not connect to Google Sheets. Check your Apps Script URL.</p>';
+}
+
+// ── SCROLL REVEAL ─────────────────────────────────────────────────────
+function setupReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal:not(.visible)').forEach(el => observer.observe(el));
+}
+</script>
+</body>
+</html>
