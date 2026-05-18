@@ -23,7 +23,7 @@
       t3 | Saint Germain Open — Final Stages | June 13–14      | Brian Watkins Tennis Center | Finals          | All levels
 
     Tab "Availabilities" columns (row 1 = headers):
-      A: Timestamp | B: Name | C: TournamentID | D: Status
+      A: Timestamp | B: Name | C: TournamentID | D: Status | E: Phone | F: Level | G: Equipment
 
   STEP 2 — Open Extensions → Apps Script, paste this code:
 
@@ -40,7 +40,8 @@
         id: r[0], name: r[1], date: r[2], location: r[3], format: r[4], level: r[5]
       }));
       const availabilities = aRows.slice(1).map(r => ({
-        timestamp: r[0], name: r[1], tournamentId: r[2], status: r[3]
+        timestamp: r[0], name: r[1], tournamentId: r[2], status: r[3],
+        phone: r[4], level: r[5], equipment: r[6]
       }));
 
       return ContentService
@@ -52,7 +53,8 @@
       const data = JSON.parse(e.postData.contents);
       const ss = SpreadsheetApp.openById(SHEET_ID);
       ss.getSheetByName(AVAILABILITY_TAB).appendRow([
-        new Date(), data.name, data.tournamentId, data.status
+        new Date(), data.name, data.tournamentId, data.status,
+        data.phone || '', data.level || '', data.equipment || ''
       ]);
       return ContentService
         .createTextOutput(JSON.stringify({ success: true }))
@@ -977,6 +979,33 @@
             <option value="" disabled selected>Select a round</option>
           </select>
         </div>
+        <div class="form-group">
+          <label class="form-label" for="input-phone">Phone number</label>
+          <input class="form-input" type="tel" id="input-phone" placeholder="+1 212 000 0000" autocomplete="tel">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="input-level">Tennis level</label>
+          <select class="form-select" id="input-level" required>
+            <option value="" disabled selected>Select your level</option>
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+            <option value="competitive">Competitive</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Own equipment (racket &amp; balls)?</label>
+          <div class="status-options">
+            <input class="status-radio" type="radio" name="equipment" id="equip-yes" value="yes" required>
+            <label class="status-label label-yes" for="equip-yes">
+              <span class="status-icon">✓</span> Yes
+            </label>
+            <input class="status-radio" type="radio" name="equipment" id="equip-no" value="no">
+            <label class="status-label label-no" for="equip-no">
+              <span class="status-icon">✗</span> No
+            </label>
+          </div>
+        </div>
         <div class="form-group full">
           <label class="form-label">Availability</label>
           <div class="status-options">
@@ -1036,7 +1065,7 @@
 
 <script>
 // ── CONFIG ── Replace with your deployed Google Apps Script URL ──────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYTc6Yfq-9gDrVjO1BOWOlfSGCLzJiNtPSFs44VR7dw5h-rdEzz47YiK6x-nFhoS5V/exec'
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-CELzVDn3Ucg1bixPRTkvmnceOIQ7fG6GGQRHVjebD9gheTTkV29p6l4aRuGvEYV_/exec'
 // ── STATE ────────────────────────────────────────────────────────────
 let tournaments = [];
 let availabilities = [];
@@ -1160,7 +1189,10 @@ function setupForm() {
     const name         = document.getElementById('input-name').value.trim();
     const tournamentId = document.getElementById('input-tournament').value;
     const status       = document.querySelector('input[name="status"]:checked')?.value;
-    if (!name || !tournamentId || !status) return;
+    const phone        = document.getElementById('input-phone').value.trim();
+    const level        = document.getElementById('input-level').value;
+    const equipment    = document.querySelector('input[name="equipment"]:checked')?.value;
+    if (!name || !tournamentId || !status || !level || !equipment) return;
 
     const btn = document.getElementById('submit-btn');
     const msg = document.getElementById('form-message');
@@ -1175,7 +1207,7 @@ function setupForm() {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, tournamentId, status }),
+          body: JSON.stringify({ name, tournamentId, status, phone, level, equipment }),
         });
       }
       availabilities.push({ name, tournamentId, status });
