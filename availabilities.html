@@ -669,9 +669,13 @@
     .hamburger { display: flex; }
     .format-section, .logistics-section, .tournaments-section { padding: 5rem 1.5rem; }
     .schedule-section, .form-section { padding: 5rem 1.5rem; }
-    .format-grid { grid-template-columns: 1fr; }
-    .schedule-track { grid-template-columns: 1fr; gap: 2.5rem; }
+    .format-grid { grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+    .format-card { padding: 1.5rem 1rem; }
+    .schedule-track { grid-template-columns: 1fr; gap: 0; padding-left: 1.5rem; border-left: 1px solid rgba(201,169,110,0.25); }
     .schedule-track::before { display: none; }
+    .schedule-phase { align-items: flex-start; text-align: left; padding-bottom: 2.5rem; position: relative; }
+    .schedule-phase:last-child { padding-bottom: 0; }
+    .phase-dot { position: absolute; left: -1.75rem; top: 0; margin-bottom: 0; transform: translateX(-50%); }
     .logistics-grid { grid-template-columns: 1fr; gap: 3rem; }
     .tournaments-grid { grid-template-columns: 1fr; }
     .reg-grid { grid-template-columns: 1fr; }
@@ -1027,12 +1031,12 @@
     <p style="font-size:0.65rem;margin-top:1.5rem;line-height:1.8;">New York City<br>contact@saintgermainnyc.com</p>
   </div>
   <div class="footer-copy">© 2026 Saint Germain New York Club · All rights reserved</div>
+  <div class="footer-copy" style="border-top: none; padding-top: 0.5rem; opacity: 0.45;">Site designed & developed by Benoît Grand</div>
 </footer>
 
 <script>
 // ── CONFIG ── Replace with your deployed Google Apps Script URL ──────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7JsGBmzLfBHCAKG0V7JrFRPTxCo3OLpvHYTyOzw4pxonaw05FW8mrOHoOmNAivN1t/exec';
-
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYTc6Yfq-9gDrVjO1BOWOlfSGCLzJiNtPSFs44VR7dw5h-rdEzz47YiK6x-nFhoS5V/exec'
 // ── STATE ────────────────────────────────────────────────────────────
 let tournaments = [];
 let availabilities = [];

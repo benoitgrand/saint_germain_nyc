@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(powershell *)",
-      "Bash(Remove-Item *)"
+      "Bash(Remove-Item *)",
+      "Bash(python -m http.server 8080)",
+      "PowerShell(Stop-Process *)"
     ]
   }
 }
