@@ -9,52 +9,48 @@
 
 <!--
   ══════════════════════════════════════════════════════════════════════
-  GOOGLE APPS SCRIPT SETUP
+  GOOGLE APPS SCRIPT SETUP  (updated schema — redeploy required)
   ══════════════════════════════════════════════════════════════════════
 
-  STEP 1 — Create a Google Sheet with two tabs:
+  STEP 1 — Create a Google Sheet with ONE tab:
 
-    Tab "Tournaments" columns (row 1 = headers):
-      A: ID | B: Name | C: Date | D: Location | E: Format | F: Level
+    Tab "Registrations" columns (row 1 = headers):
+      A: Timestamp | B: FirstName | C: LastName | D: Gender (H/F)
+      E: Phone | F: Experience | G: Ranking | H: Slots (comma-separated)
 
-    Example rows:
-      t1 | Saint Germain Open — First Round  | Week of June 1  | Brian Watkins Tennis Center | Men's Singles   | All levels
-      t2 | Saint Germain Open — Second Round | Week of June 8  | Brian Watkins Tennis Center | Women's Singles | All levels
-      t3 | Saint Germain Open — Final Stages | June 13–14      | Brian Watkins Tennis Center | Finals          | All levels
-
-    Tab "Availabilities" columns (row 1 = headers):
-      A: Timestamp | B: Name | C: TournamentID | D: Status | E: Phone | F: Level | G: Equipment
+    Slots reference:
+      s1  = Tue Jun 16  18:00-20:00    s2  = Wed Jun 17  18:00-20:00
+      s3  = Thu Jun 18  18:00-20:00    s4  = Fri Jun 19  18:00-20:00
+      s5  = Sat Jun 20  10:00-12:00    s6  = Sat Jun 20  12:00-14:00
+      s7  = Sat Jun 20  14:00-16:00    s8  = Sat Jun 20  16:00-18:00
+      s9  = Sun Jun 21  10:00-12:00    s10 = Sun Jun 21  12:00-14:00
+      s11 = Sun Jun 21  14:00-16:00    s12 = Sun Jun 21  16:00-18:00
 
   STEP 2 — Open Extensions → Apps Script, paste this code:
 
-    const SHEET_ID = '1fGFC_-Y0ilOKUD8oHX4eKg3XVGTO5X5_olcATAL0x4g/edit?gid=525322992#gid=525322992'; // from sheet URL
-    const TOURNAMENT_TAB = 'Tournaments';
-    const AVAILABILITY_TAB = 'Availabilities';
+    const SHEET_ID = 'YOUR_SHEET_ID_HERE'; // from sheet URL
+    const REG_TAB  = 'Registrations';
 
     function doGet() {
-      const ss = SpreadsheetApp.openById(SHEET_ID);
-      const tRows = ss.getSheetByName(TOURNAMENT_TAB).getDataRange().getValues();
-      const aRows = ss.getSheetByName(AVAILABILITY_TAB).getDataRange().getValues();
-
-      const tournaments = tRows.slice(1).map(r => ({
-        id: r[0], name: r[1], date: r[2], location: r[3], format: r[4], level: r[5]
+      const ss   = SpreadsheetApp.openById(SHEET_ID);
+      const rows = ss.getSheetByName(REG_TAB).getDataRange().getValues();
+      const registrations = rows.slice(1).map(r => ({
+        timestamp:  r[0], firstName: r[1], lastName: r[2],
+        gender:     r[3], phone:     r[4], experience: r[5],
+        ranking:    r[6], slots:     r[7] ? String(r[7]).split(',') : []
       }));
-      const availabilities = aRows.slice(1).map(r => ({
-        timestamp: r[0], name: r[1], tournamentId: r[2], status: r[3],
-        phone: r[4], level: r[5], equipment: r[6]
-      }));
-
       return ContentService
-        .createTextOutput(JSON.stringify({ tournaments, availabilities }))
+        .createTextOutput(JSON.stringify({ registrations }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
     function doPost(e) {
       const data = JSON.parse(e.postData.contents);
-      const ss = SpreadsheetApp.openById(SHEET_ID);
-      ss.getSheetByName(AVAILABILITY_TAB).appendRow([
-        new Date(), data.name, data.tournamentId, data.status,
-        data.phone || '', data.level || '', data.equipment || ''
+      const ss   = SpreadsheetApp.openById(SHEET_ID);
+      ss.getSheetByName(REG_TAB).appendRow([
+        new Date(), data.firstName, data.lastName, data.gender,
+        data.phone || '', data.experience || '', data.ranking || '',
+        (data.slots || []).join(',')
       ]);
       return ContentService
         .createTextOutput(JSON.stringify({ success: true }))
@@ -62,9 +58,7 @@
     }
 
   STEP 3 — Deploy → New deployment:
-    Type: Web app
-    Execute as: Me
-    Who has access: Anyone
+    Type: Web app  |  Execute as: Me  |  Who has access: Anyone
     → Copy the deployment URL
 
   STEP 4 — Replace 'YOUR_APPS_SCRIPT_URL_HERE' below with that URL.
@@ -272,13 +266,13 @@
   .schedule-track {
     margin-top: 4rem;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 0;
     position: relative;
   }
   .schedule-track::before {
     content: '';
-    position: absolute; top: 22px; left: calc(1/6 * 100%); right: calc(1/6 * 100%);
+    position: absolute; top: 22px; left: calc(1/8 * 100%); right: calc(1/8 * 100%);
     height: 1px; background: rgba(201,169,110,0.25);
   }
   .schedule-phase { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 2rem; }
@@ -413,6 +407,69 @@
     cursor: pointer; transition: all 0.3s;
   }
   .add-me-btn:hover { background: var(--gold); color: var(--black); }
+
+  /* ── SLOT DISPLAY (availability section) ── */
+  .slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.2rem; margin-top: 3rem;
+  }
+  .slot-day-card {
+    background: #fff;
+    border: 1px solid rgba(201,169,110,0.25);
+    overflow: hidden;
+    transition: border-color 0.35s, transform 0.35s, box-shadow 0.35s;
+  }
+  .slot-day-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(43,58,74,0.08);
+  }
+  .slot-day-header {
+    padding: 0.75rem 1.3rem;
+    background: var(--accent); color: var(--cream);
+    font-size: 0.58rem; letter-spacing: 0.3em; text-transform: uppercase;
+  }
+  .slot-row {
+    padding: 0.75rem 1.3rem;
+    border-bottom: 1px solid rgba(201,169,110,0.1);
+  }
+  .slot-row:last-child { border-bottom: none; }
+  .slot-time-label {
+    font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 0.45rem;
+  }
+  .slot-players { display: flex; flex-wrap: wrap; gap: 0.35rem; min-height: 22px; }
+
+  /* ── SLOT FORM ── */
+  .slots-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 0.9rem;
+  }
+  .slot-form-day {
+    border: 1px solid rgba(201,169,110,0.18);
+    padding: 0.85rem 1rem;
+  }
+  .slot-form-day-label {
+    font-size: 0.56rem; letter-spacing: 0.25em; text-transform: uppercase;
+    color: rgba(201,169,110,0.7); margin-bottom: 0.65rem;
+  }
+  .slot-form-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .slot-checkbox { display: none; }
+  .slot-chip-label {
+    display: inline-flex; align-items: center;
+    padding: 0.42rem 0.75rem;
+    border: 1px solid rgba(201,169,110,0.28);
+    cursor: pointer; font-size: 0.63rem; letter-spacing: 0.07em;
+    color: rgba(247,243,236,0.42);
+    transition: all 0.25s; user-select: none;
+  }
+  .slot-chip-label:hover { border-color: rgba(201,169,110,0.7); color: var(--cream); }
+  .slot-checkbox:checked + .slot-chip-label {
+    border-color: var(--gold); color: var(--gold);
+    background: rgba(201,169,110,0.1);
+  }
 
   /* ── SETUP BANNER ── */
   .setup-banner {
@@ -680,6 +737,8 @@
     .phase-dot { position: absolute; left: -1.75rem; top: 0; margin-bottom: 0; transform: translateX(-50%); }
     .logistics-grid { grid-template-columns: 1fr; gap: 3rem; }
     .tournaments-grid { grid-template-columns: 1fr; }
+    .slots-grid { grid-template-columns: 1fr; }
+    .slots-form-grid { grid-template-columns: repeat(2, 1fr); gap: 0.7rem; }
     .reg-grid { grid-template-columns: 1fr; }
     .form-grid { grid-template-columns: 1fr; }
     .form-group.full { grid-column: 1; }
@@ -746,7 +805,7 @@
   <p class="hero-eyebrow">First Edition · Tennis · Saint Germain NYC</p>
   <h1 class="hero-title">Saint Germain<br><em>Open</em></h1>
   <div class="hero-rule"></div>
-  <p class="hero-dates">June 1 – June 14, 2026</p>
+  <p class="hero-dates">June 16 – 28, 2026</p>
   <p class="hero-venue">Brian Watkins Tennis Center · New York City</p>
   <div class="hero-cta">
     <a href="#register" class="btn-primary">Register Now</a>
@@ -782,15 +841,15 @@
       <div class="format-card reveal">
         <svg class="format-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
         <div class="format-card-label">Match Format</div>
-        <div class="format-card-value">One<br>Winning Set</div>
-        <div class="format-card-note">Matches are decided by a single set — quick, decisive, and exciting.</div>
+        <div class="format-card-value">Two<br>Sets</div>
+        <div class="format-card-note">Matches are played over two sets — expect 1h to 1h30 of play, within a 2-hour slot.</div>
       </div>
 
       <div class="format-card reveal">
         <svg class="format-icon" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
-        <div class="format-card-label">Warm-Up</div>
-        <div class="format-card-value">Up to 20<br>Minutes</div>
-        <div class="format-card-note">Each match begins with a proper warm-up before the first point.</div>
+        <div class="format-card-label">Time Slot</div>
+        <div class="format-card-value">2-hour<br>Window</div>
+        <div class="format-card-note">Each slot is 2 hours — enough for a warm-up and a full two-set match.</div>
       </div>
 
       <div class="format-card reveal" style="grid-column: span 2;">
@@ -814,23 +873,30 @@
 
       <div class="schedule-phase reveal">
         <div class="phase-dot"></div>
-        <div class="phase-number">Round One</div>
-        <div class="phase-name">First<br><em>Round</em></div>
-        <div class="phase-date">Week of June 1</div>
+        <div class="phase-number">Huitièmes de finale</div>
+        <div class="phase-name">Round<br><em>of 16</em></div>
+        <div class="phase-date">June 16–21</div>
       </div>
 
       <div class="schedule-phase reveal">
         <div class="phase-dot"></div>
-        <div class="phase-number">Round Two</div>
-        <div class="phase-name">Second<br><em>Round</em></div>
-        <div class="phase-date">Week of June 8</div>
+        <div class="phase-number">Quarts de finale</div>
+        <div class="phase-name">Quarter<br><em>Finals</em></div>
+        <div class="phase-date">June 22–26</div>
+      </div>
+
+      <div class="schedule-phase reveal">
+        <div class="phase-dot"></div>
+        <div class="phase-number">Demi-finales</div>
+        <div class="phase-name">Semi<br><em>Finals</em></div>
+        <div class="phase-date">June 27</div>
       </div>
 
       <div class="schedule-phase reveal">
         <div class="phase-dot" style="background: var(--gold-light); box-shadow: 0 0 10px rgba(201,169,110,0.4);"></div>
-        <div class="phase-number">Finals</div>
-        <div class="phase-name">Final<br><em>Stages</em></div>
-        <div class="phase-date">Weekend of June 13–14</div>
+        <div class="phase-number">Finale</div>
+        <div class="phase-name">Final &amp;<br><em>Social Evening</em></div>
+        <div class="phase-date">June 28</div>
       </div>
 
     </div>
@@ -850,17 +916,17 @@
         <div class="time-slot">
           <svg class="time-slot-icon" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
           <div>
-            <div class="time-slot-label">Weekday Evenings</div>
-            <div class="time-slot-value">7:00 PM until sunset</div>
-            <div class="time-slot-note">Monday through Friday during tournament weeks.</div>
+            <div class="time-slot-label">Weekday Evenings (Tue–Fri)</div>
+            <div class="time-slot-value">6:00 PM – 8:00 PM</div>
+            <div class="time-slot-note">One slot per weekday evening during the first round (June 16–19).</div>
           </div>
         </div>
         <div class="time-slot">
           <svg class="time-slot-icon" width="16" height="16" viewBox="0 0 24 24"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/></svg>
           <div>
-            <div class="time-slot-label">Weekend</div>
-            <div class="time-slot-value">Mornings &amp; afternoons</div>
-            <div class="time-slot-note">Saturday and Sunday — both morning and afternoon slots available.</div>
+            <div class="time-slot-label">Weekend (Sat–Sun)</div>
+            <div class="time-slot-value">10:00 AM – 6:00 PM</div>
+            <div class="time-slot-note">Four 2-hour slots: 10–12, 12–14, 14–16, 16–18 on Saturday June 20 &amp; Sunday June 21.</div>
           </div>
         </div>
       </div>
@@ -889,13 +955,16 @@
   </div>
 </section>
 
-<!-- AVAILABILITY GRID -->
+<!-- AVAILABILITY GRID — Round of 16 -->
 <section class="tournaments-section" id="availability">
   <div class="container">
-    <p class="section-label">Who's Playing</p>
-    <h2 class="section-title reveal">Player<br><em style="font-style:italic;font-family:'Cormorant Garamond',serif;">Availability</em></h2>
+    <p class="section-label">Huitièmes de finale · June 16–21</p>
+    <h2 class="section-title reveal">Who can<br><em style="font-style:italic;font-family:'Cormorant Garamond',serif;">play when</em></h2>
     <div class="divider"></div>
-    <div id="tournaments-grid" class="tournaments-grid">
+    <p style="font-size:0.82rem;line-height:1.9;color:var(--warm-grey);max-width:480px;margin-bottom:0.5rem;">
+      Players registered for the Round of 16 — grouped by time slot.
+    </p>
+    <div id="slots-grid" class="slots-grid">
       <div class="loading-state">
         <div class="spinner"></div>
         <span>Loading</span>
@@ -903,7 +972,10 @@
     </div>
     <div id="setup-banner" class="setup-banner">
       <div class="setup-banner-title">Demo mode active</div>
-      <p>This page is running with placeholder data. To connect it to your Google Sheet, open <code>availabilities.html</code> and follow the setup instructions in the comment at the top of the file, then replace <code>YOUR_APPS_SCRIPT_URL_HERE</code> with your deployed Apps Script URL.</p>
+      <p>Running with placeholder data. Replace <code>YOUR_APPS_SCRIPT_URL_HERE</code> in the script with your deployed Apps Script URL, and redeploy the Apps Script with the updated schema shown in the comment at the top of this file.</p>
+    </div>
+    <div style="margin-top:2.5rem;text-align:center;">
+      <a href="#register" class="btn-primary" style="display:inline-block;">Register &amp; add your slots</a>
     </div>
   </div>
 </section>
@@ -921,7 +993,7 @@
           <svg class="reg-row-icon" width="16" height="16" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
           <div>
             <div class="reg-row-label">Registration Deadline</div>
-            <div class="reg-row-value"><strong>Saturday, May 30</strong></div>
+            <div class="reg-row-value"><strong>Friday, June 13</strong></div>
           </div>
         </div>
         <div class="reg-row">
@@ -962,71 +1034,124 @@
 
     <hr class="form-divider">
 
-    <p class="section-label">Availability</p>
-    <h3 style="font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:300;color:var(--cream);line-height:1.1;" class="reveal">Add your<br><em style="font-style:italic;">availability</em></h3>
+    <p class="section-label">Inscription · Round of 16</p>
+    <h3 style="font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:300;color:var(--cream);line-height:1.1;" class="reveal">Register &amp; pick<br><em style="font-style:italic;">your slots</em></h3>
     <div class="divider reveal"></div>
-    <p style="font-size:0.82rem;line-height:1.9;color:rgba(247,243,236,0.5);max-width:460px;">
-      Select a round and let the team know if you're available — your response will appear on the cards above right away.
+    <p style="font-size:0.82rem;line-height:1.9;color:rgba(247,243,236,0.5);max-width:520px;margin-bottom:2.5rem;">
+      Fill in your details and check every slot that works for you — the more you select, the easier it is to schedule your Round of 16 match.
     </p>
 
     <form id="availability-form">
       <div class="form-grid">
+
         <div class="form-group">
-          <label class="form-label" for="input-name">Your name</label>
-          <input class="form-input" type="text" id="input-name" placeholder="First Last" required autocomplete="name">
+          <label class="form-label" for="input-firstname">First name *</label>
+          <input class="form-input" type="text" id="input-firstname" placeholder="Prénom" required autocomplete="given-name">
         </div>
         <div class="form-group">
-          <label class="form-label" for="input-tournament">Round</label>
-          <select class="form-select" id="input-tournament" required>
-            <option value="" disabled selected>Select a round</option>
-          </select>
+          <label class="form-label" for="input-lastname">Last name *</label>
+          <input class="form-input" type="text" id="input-lastname" placeholder="Nom de famille" required autocomplete="family-name">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Gender *</label>
+          <div class="status-options">
+            <input class="status-radio" type="radio" name="gender" id="gender-h" value="H" required>
+            <label class="status-label" for="gender-h">H — Homme</label>
+            <input class="status-radio" type="radio" name="gender" id="gender-f" value="F">
+            <label class="status-label" for="gender-f">F — Femme</label>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label" for="input-phone">Phone number</label>
           <input class="form-input" type="tel" id="input-phone" placeholder="+1 212 000 0000" autocomplete="tel">
         </div>
+
         <div class="form-group">
-          <label class="form-label" for="input-level">Tennis level</label>
-          <select class="form-select" id="input-level" required>
-            <option value="" disabled selected>Select your level</option>
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="advanced">Advanced</option>
-            <option value="competitive">Competitive</option>
+          <label class="form-label" for="input-experience">Years of experience *</label>
+          <select class="form-select" id="input-experience" required>
+            <option value="" disabled selected>Select range</option>
+            <option value="&lt;1">Less than 1 year</option>
+            <option value="1-3">1–3 years</option>
+            <option value="4-6">4–6 years</option>
+            <option value="7+">7+ years</option>
           </select>
         </div>
+        <div class="form-group">
+          <label class="form-label" for="input-ranking">Classement / Ranking</label>
+          <input class="form-input" type="text" id="input-ranking" placeholder="e.g. 4.0 NTRP · 30/4 FFT · UTR 8">
+        </div>
+
         <div class="form-group full">
-          <label class="form-label">Own equipment (racket &amp; balls)?</label>
-          <div class="status-options">
-            <input class="status-radio" type="radio" name="equipment" id="equip-yes" value="yes" required>
-            <label class="status-label label-yes" for="equip-yes">
-              <span class="status-icon">✓</span> Yes
-            </label>
-            <input class="status-radio" type="radio" name="equipment" id="equip-no" value="no">
-            <label class="status-label label-no" for="equip-no">
-              <span class="status-icon">✗</span> No
-            </label>
+          <label class="form-label">Available slots — check all that work for you *</label>
+          <p style="font-size:0.7rem;color:rgba(247,243,236,0.32);margin:0.5rem 0 1.3rem;line-height:1.8;">Select as many as possible. Each slot is 2 hours. At least one is required.</p>
+          <div class="slots-form-grid">
+
+            <div class="slot-form-day">
+              <div class="slot-form-day-label">Tue · Jun 16</div>
+              <div class="slot-form-chips">
+                <input class="slot-checkbox" type="checkbox" name="slots" id="s1" value="s1">
+                <label class="slot-chip-label" for="s1">18:00–20:00</label>
+              </div>
+            </div>
+
+            <div class="slot-form-day">
+              <div class="slot-form-day-label">Wed · Jun 17</div>
+              <div class="slot-form-chips">
+                <input class="slot-checkbox" type="checkbox" name="slots" id="s2" value="s2">
+                <label class="slot-chip-label" for="s2">18:00–20:00</label>
+              </div>
+            </div>
+
+            <div class="slot-form-day">
+              <div class="slot-form-day-label">Thu · Jun 18</div>
+              <div class="slot-form-chips">
+                <input class="slot-checkbox" type="checkbox" name="slots" id="s3" value="s3">
+                <label class="slot-chip-label" for="s3">18:00–20:00</label>
+              </div>
+            </div>
+
+            <div class="slot-form-day">
+              <div class="slot-form-day-label">Fri · Jun 19</div>
+              <div class="slot-form-chips">
+                <input class="slot-checkbox" type="checkbox" name="slots" id="s4" value="s4">
+                <label class="slot-chip-label" for="s4">18:00–20:00</label>
+              </div>
+            </div>
+
+            <div class="slot-form-day">
+              <div class="slot-form-day-label">Sat · Jun 20</div>
+              <div class="slot-form-chips">
+                <input class="slot-checkbox" type="checkbox" name="slots" id="s5" value="s5">
+                <label class="slot-chip-label" for="s5">10:00–12:00</label>
+                <input class="slot-checkbox" type="checkbox" name="slots" id="s6" value="s6">
+                <label class="slot-chip-label" for="s6">12:00–14:00</label>
+                <input class="slot-checkbox" type="checkbox" name="slots" id="s7" value="s7">
+                <label class="slot-chip-label" for="s7">14:00–16:00</label>
+                <input class="slot-checkbox" type="checkbox" name="slots" id="s8" value="s8">
+                <label class="slot-chip-label" for="s8">16:00–18:00</label>
+              </div>
+            </div>
+
+            <div class="slot-form-day">
+              <div class="slot-form-day-label">Sun · Jun 21</div>
+              <div class="slot-form-chips">
+                <input class="slot-checkbox" type="checkbox" name="slots" id="s9" value="s9">
+                <label class="slot-chip-label" for="s9">10:00–12:00</label>
+                <input class="slot-checkbox" type="checkbox" name="slots" id="s10" value="s10">
+                <label class="slot-chip-label" for="s10">12:00–14:00</label>
+                <input class="slot-checkbox" type="checkbox" name="slots" id="s11" value="s11">
+                <label class="slot-chip-label" for="s11">14:00–16:00</label>
+                <input class="slot-checkbox" type="checkbox" name="slots" id="s12" value="s12">
+                <label class="slot-chip-label" for="s12">16:00–18:00</label>
+              </div>
+            </div>
+
           </div>
         </div>
-        <div class="form-group full">
-          <label class="form-label">Availability</label>
-          <div class="status-options">
-            <input class="status-radio" type="radio" name="status" id="status-yes" value="yes" required>
-            <label class="status-label label-yes" for="status-yes">
-              <span class="status-icon">✓</span> Available
-            </label>
-            <input class="status-radio" type="radio" name="status" id="status-maybe" value="maybe">
-            <label class="status-label" for="status-maybe">
-              <span class="status-icon">?</span> Maybe
-            </label>
-            <input class="status-radio" type="radio" name="status" id="status-no" value="no">
-            <label class="status-label label-no" for="status-no">
-              <span class="status-icon">✗</span> Not available
-            </label>
-          </div>
-        </div>
+
       </div>
-      <button type="submit" class="submit-btn" id="submit-btn">Submit Availability</button>
+      <button type="submit" class="submit-btn" id="submit-btn">Register</button>
       <p class="form-message" id="form-message"></p>
     </form>
   </div>
@@ -1068,16 +1193,40 @@
 
 <script>
 // ── CONFIG ── Replace with your deployed Google Apps Script URL ──────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-CELzVDn3Ucg1bixPRTkvmnceOIQ7fG6GGQRHVjebD9gheTTkV29p6l4aRuGvEYV_/exec'
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-CELzVDn3Ucg1bixPRTkvmnceOIQ7fG6GGQRHVjebD9gheTTkV29p6l4aRuGvEYV_/exec';
+
+// ── SLOT DEFINITIONS ─────────────────────────────────────────────────
+const SLOTS = [
+  { id: 's1',  day: 'Tuesday · June 16',   time: '18:00–20:00' },
+  { id: 's2',  day: 'Wednesday · June 17', time: '18:00–20:00' },
+  { id: 's3',  day: 'Thursday · June 18',  time: '18:00–20:00' },
+  { id: 's4',  day: 'Friday · June 19',    time: '18:00–20:00' },
+  { id: 's5',  day: 'Saturday · June 20',  time: '10:00–12:00' },
+  { id: 's6',  day: 'Saturday · June 20',  time: '12:00–14:00' },
+  { id: 's7',  day: 'Saturday · June 20',  time: '14:00–16:00' },
+  { id: 's8',  day: 'Saturday · June 20',  time: '16:00–18:00' },
+  { id: 's9',  day: 'Sunday · June 21',    time: '10:00–12:00' },
+  { id: 's10', day: 'Sunday · June 21',    time: '12:00–14:00' },
+  { id: 's11', day: 'Sunday · June 21',    time: '14:00–16:00' },
+  { id: 's12', day: 'Sunday · June 21',    time: '16:00–18:00' },
+];
+
+const DAYS = [
+  { label: 'Tuesday · June 16',   slots: ['s1'] },
+  { label: 'Wednesday · June 17', slots: ['s2'] },
+  { label: 'Thursday · June 18',  slots: ['s3'] },
+  { label: 'Friday · June 19',    slots: ['s4'] },
+  { label: 'Saturday · June 20',  slots: ['s5','s6','s7','s8'] },
+  { label: 'Sunday · June 21',    slots: ['s9','s10','s11','s12'] },
+];
+
 // ── STATE ────────────────────────────────────────────────────────────
-let tournaments = [];
-let availabilities = [];
+let registrations = [];
 
 // ── BOOT ─────────────────────────────────────────────────────────────
 (async function init() {
   await loadData();
-  renderTournaments();
-  populateTournamentSelect();
+  renderSlots();
   setupForm();
   setupReveal();
 })();
@@ -1089,10 +1238,9 @@ async function loadData() {
     return;
   }
   try {
-    const res = await fetch(APPS_SCRIPT_URL);
+    const res  = await fetch(APPS_SCRIPT_URL);
     const data = await res.json();
-    tournaments    = data.tournaments    || [];
-    availabilities = data.availabilities || [];
+    registrations = data.registrations || [];
   } catch {
     useDemoData();
     showError();
@@ -1100,105 +1248,69 @@ async function loadData() {
 }
 
 function useDemoData() {
-  tournaments = [
-    { id: 't1', name: 'First Round',   date: 'Week of June 1',  location: 'Brian Watkins Tennis Center', format: "Men's & Women's Singles", level: 'All levels' },
-    { id: 't2', name: 'Second Round',  date: 'Week of June 8',  location: 'Brian Watkins Tennis Center', format: "Men's & Women's Singles", level: 'All levels' },
-    { id: 't3', name: 'Final Stages',  date: 'June 13–14',      location: 'Brian Watkins Tennis Center', format: 'Finals',                  level: 'All levels' },
-  ];
-  availabilities = [
-    { name: 'Sophie M.',  tournamentId: 't1', status: 'yes'   },
-    { name: 'Antoine D.', tournamentId: 't1', status: 'yes'   },
-    { name: 'Camille R.', tournamentId: 't1', status: 'maybe' },
-    { name: 'Pierre L.',  tournamentId: 't2', status: 'yes'   },
-    { name: 'Emma W.',    tournamentId: 't2', status: 'yes'   },
-    { name: 'Lucas B.',   tournamentId: 't2', status: 'maybe' },
+  registrations = [
+    { firstName: 'Sophie',  lastName: 'M.', gender: 'F', experience: '4-6', ranking: '4.0 NTRP', slots: ['s1','s5','s6','s9']              },
+    { firstName: 'Antoine', lastName: 'D.', gender: 'H', experience: '7+',  ranking: '30/2 FFT', slots: ['s2','s3','s7','s8','s10']         },
+    { firstName: 'Camille', lastName: 'R.', gender: 'F', experience: '2-3', ranking: '4.5 NTRP', slots: ['s1','s2','s9','s11']              },
+    { firstName: 'Pierre',  lastName: 'L.', gender: 'H', experience: '7+',  ranking: 'UTR 8.2',  slots: ['s4','s5','s6','s12']             },
+    { firstName: 'Emma',    lastName: 'W.', gender: 'F', experience: '4-6', ranking: '15/4 FFT', slots: ['s3','s7','s8','s11']             },
   ];
   document.getElementById('setup-banner').classList.add('visible');
 }
 
-// ── RENDER TOURNAMENTS ────────────────────────────────────────────────
-function renderTournaments() {
-  const grid = document.getElementById('tournaments-grid');
-  if (!tournaments.length) {
-    grid.innerHTML = '<p style="grid-column:1/-1;font-size:0.78rem;color:var(--warm-grey);font-style:italic;">No rounds loaded yet — check back soon.</p>';
-    return;
-  }
-  grid.innerHTML = tournaments.map(t => {
-    const avails      = availabilities.filter(a => a.tournamentId === t.id);
-    const yesGroup    = avails.filter(a => a.status === 'yes');
-    const maybeGroup  = avails.filter(a => a.status === 'maybe');
-    const noGroup     = avails.filter(a => a.status === 'no');
+// ── RENDER SLOTS ──────────────────────────────────────────────────────
+function renderSlots() {
+  const grid = document.getElementById('slots-grid');
 
-    const chips = [
-      ...yesGroup.map(p   => chip(p.name, 'yes')),
-      ...maybeGroup.map(p => chip(p.name, 'maybe')),
-      ...noGroup.map(p    => chip(p.name, 'no')),
-    ].join('') || '<span class="no-players-msg">Be the first to sign up</span>';
+  grid.innerHTML = DAYS.map(day => {
+    const slotRows = day.slots.map(slotId => {
+      const slot    = SLOTS.find(s => s.id === slotId);
+      const players = registrations.filter(r => (r.slots || []).includes(slotId));
+      const chips   = players.length
+        ? players.map(p =>
+            `<span class="player-chip status-yes"><span class="player-dot"></span>${p.firstName} ${(p.lastName || '').charAt(0)}.</span>`
+          ).join('')
+        : '<span class="no-players-msg">—</span>';
+
+      return `
+        <div class="slot-row">
+          <div class="slot-time-label">${slot.time}</div>
+          <div class="slot-players">${chips}</div>
+        </div>`;
+    }).join('');
 
     return `
-      <div class="tournament-card reveal">
-        <div class="tournament-date-badge">${t.date}</div>
-        <div class="tournament-level">${t.level} · ${t.format}</div>
-        <div class="tournament-name">${t.name}</div>
-        <div class="tournament-meta">
-          <div class="tournament-meta-row">
-            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-            ${t.location}
-          </div>
-          <div class="tournament-meta-row">
-            <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
-            ${t.date}
-          </div>
-        </div>
-        <div class="players-section">
-          <div class="players-label">
-            <span>Players</span>
-            <span class="players-count">${yesGroup.length} available</span>
-          </div>
-          <div class="players-list">${chips}</div>
-          <button class="add-me-btn" onclick="scrollToForm('${t.id}')">+ Add my availability</button>
-        </div>
+      <div class="slot-day-card reveal">
+        <div class="slot-day-header">${day.label}</div>
+        ${slotRows}
       </div>`;
   }).join('');
+
   setupReveal();
-}
-
-function chip(name, status) {
-  return `<span class="player-chip status-${status}"><span class="player-dot"></span>${name}</span>`;
-}
-
-// ── SELECT ────────────────────────────────────────────────────────────
-function populateTournamentSelect() {
-  const select = document.getElementById('input-tournament');
-  select.innerHTML = '<option value="" disabled selected>Select a round</option>';
-  tournaments.forEach(t => {
-    const opt = document.createElement('option');
-    opt.value       = t.id;
-    opt.textContent = `${t.name} — ${t.date}`;
-    select.appendChild(opt);
-  });
-}
-
-// ── SCROLL TO FORM ────────────────────────────────────────────────────
-function scrollToForm(tournamentId) {
-  document.getElementById('register').scrollIntoView({ behavior: 'smooth' });
-  setTimeout(() => { document.getElementById('input-tournament').value = tournamentId; }, 600);
 }
 
 // ── FORM SUBMIT ───────────────────────────────────────────────────────
 function setupForm() {
   document.getElementById('availability-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name         = document.getElementById('input-name').value.trim();
-    const tournamentId = document.getElementById('input-tournament').value;
-    const status       = document.querySelector('input[name="status"]:checked')?.value;
-    const phone        = document.getElementById('input-phone').value.trim();
-    const level        = document.getElementById('input-level').value;
-    const equipment    = document.querySelector('input[name="equipment"]:checked')?.value;
-    if (!name || !tournamentId || !status || !level || !equipment) return;
+
+    const firstName  = document.getElementById('input-firstname').value.trim();
+    const lastName   = document.getElementById('input-lastname').value.trim();
+    const gender     = document.querySelector('input[name="gender"]:checked')?.value;
+    const phone      = document.getElementById('input-phone').value.trim();
+    const experience = document.getElementById('input-experience').value;
+    const ranking    = document.getElementById('input-ranking').value.trim();
+    const slots      = [...document.querySelectorAll('input[name="slots"]:checked')].map(c => c.value);
+
+    const msg = document.getElementById('form-message');
+
+    if (!firstName || !lastName || !gender || !experience || !slots.length) {
+      msg.textContent = '✗ Please fill in all required fields and select at least one slot.';
+      msg.className = 'form-message error';
+      return;
+    }
 
     const btn = document.getElementById('submit-btn');
-    const msg = document.getElementById('form-message');
     btn.disabled = true;
     btn.textContent = 'Sending…';
     msg.textContent = '';
@@ -1210,37 +1322,37 @@ function setupForm() {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, tournamentId, status, phone, level, equipment }),
+          body: JSON.stringify({ firstName, lastName, gender, phone, experience, ranking, slots }),
         });
       }
-      availabilities.push({ name, tournamentId, status });
-      renderTournaments();
+      registrations.push({ firstName, lastName, gender, phone, experience, ranking, slots });
+      renderSlots();
       e.target.reset();
       msg.textContent = APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE'
         ? '✓ Added locally (demo — not saved to sheet)'
-        : '✓ Your availability has been saved!';
+        : '✓ Registration saved! We\'ll be in touch with your match details.';
       msg.className = 'form-message success';
     } catch {
       msg.textContent = '✗ Something went wrong. Please try again.';
       msg.className = 'form-message error';
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Submit Availability';
+      btn.textContent = 'Register';
     }
   });
 }
 
 function showError() {
-  document.getElementById('tournaments-grid').innerHTML =
-    '<p style="grid-column:1/-1;font-size:0.78rem;color:#c47b7b;">Could not connect to Google Sheets. Check your Apps Script URL.</p>';
+  document.getElementById('slots-grid').innerHTML =
+    '<p style="grid-column:1/-1;font-size:0.78rem;color:#c47b7b;">Could not connect to Google Sheets. Check your Apps Script URL and redeploy.</p>';
 }
 
 // ── MOBILE DRAWER ─────────────────────────────────────────────────────
 (function() {
-  const hamburger    = document.getElementById('hamburger');
-  const sideDrawer   = document.getElementById('side-drawer');
-  const overlay      = document.getElementById('drawer-overlay');
-  const closeBtn     = document.getElementById('drawer-close');
+  const hamburger  = document.getElementById('hamburger');
+  const sideDrawer = document.getElementById('side-drawer');
+  const overlay    = document.getElementById('drawer-overlay');
+  const closeBtn   = document.getElementById('drawer-close');
 
   function open()  {
     sideDrawer.classList.add('open');
