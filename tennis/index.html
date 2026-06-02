@@ -732,9 +732,9 @@
     .format-card { padding: 1.5rem 1rem; }
     .schedule-track { grid-template-columns: 1fr; gap: 0; padding-left: 1.5rem; border-left: 1px solid rgba(201,169,110,0.25); }
     .schedule-track::before { display: none; }
-    .schedule-phase { align-items: flex-start; text-align: left; padding-bottom: 2.5rem; position: relative; }
-    .schedule-phase:last-child { padding-bottom: 0; }
-    .phase-dot { position: absolute; left: -1.5rem; top: 0; margin-bottom: 0; transform: translateX(-50%); }
+    .schedule-phase { align-items: flex-start; text-align: left; margin-bottom: 2.5rem; position: relative; }
+    .schedule-phase:last-child { margin-bottom: 0; }
+    .phase-dot { position: absolute; left: -1.5rem; top: 50%; margin-bottom: 0; transform: translateX(-50%) translateY(-50%); }
     .logistics-grid { grid-template-columns: 1fr; gap: 3rem; }
     .tournaments-grid { grid-template-columns: 1fr; }
     .slots-grid { grid-template-columns: 1fr; }
