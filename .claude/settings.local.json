@@ -6,7 +6,32 @@
       "Bash(python -m http.server 8080)",
       "PowerShell(npx --yes serve \"C:\\\\Users\\\\bgdu6\\\\Documents\\\\Saint_Germain_NYC\\\\site\" -p 8080 -l)",
       "PowerShell(Get-Command *)",
-      "PowerShell(Start-Process -FilePath \"C:\\\\Users\\\\bgdu6\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe\" -ArgumentList \"-m http.server 8080\" -WorkingDirectory \"C:\\\\Users\\\\bgdu6\\\\Documents\\\\Saint_Germain_NYC\\\\site\" -WindowStyle Normal)"
+      "PowerShell(Start-Process -FilePath \"C:\\\\Users\\\\bgdu6\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe\" -ArgumentList \"-m http.server 8080\" -WorkingDirectory \"C:\\\\Users\\\\bgdu6\\\\Documents\\\\Saint_Germain_NYC\\\\site\" -WindowStyle Normal)",
+      "Bash(mkdir -p \"/mnt/c/Users/bgdu6/Documents/Saint_Germain_NYC/site/tennis\")",
+      "Bash(cp \"/mnt/c/Users/bgdu6/Documents/Saint_Germain_NYC/site/availabilities.html\" \"/mnt/c/Users/bgdu6/Documents/Saint_Germain_NYC/site/tennis/index.html\")",
+      "PowerShell(New-Item *)",
+      "PowerShell(Remove-Item *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'tennis: refactor for R16 slots, new player registration form *)",
+      "Bash(git commit -m 'tennis: fix schedule dot alignment — top 22px → 4px *)",
+      "Bash(git commit -m 'tennis: fix mobile schedule dot alignment *)",
+      "Bash(git commit -m 'tennis: center schedule dots vertically on mobile *)",
+      "Bash(git commit -m 'tennis: fix Apps Script URL placement *)",
+      "Bash(git commit -m 'tennis: update Apps Script URL to latest deployment *)",
+      "Bash(git push *)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "Bash(python -m http.server 8000)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/)",
+      "Bash(curl -sL \"https://script.google.com/macros/s/AKfycbylmi_Wd3xifWsVgU0VBf1Om6p8NHmhph-fdae5gFEyOgpt5fhgz04hCMfhaCNTZuZ9/exec\")",
+      "Bash(curl -si \"https://script.google.com/macros/s/AKfycbylmi_Wd3xifWsVgU0VBf1Om6p8NHmhph-fdae5gFEyOgpt5fhgz04hCMfhaCNTZuZ9/exec\")",
+      "Bash(curl -v \"https://script.google.com/macros/s/AKfycbylmi_Wd3xifWsVgU0VBf1Om6p8NHmhph-fdae5gFEyOgpt5fhgz04hCMfhaCNTZuZ9/exec\")",
+      "Bash(curl -sk \"https://script.google.com/macros/s/AKfycbzVBngumd59INo9usb04xHnUirt6I6ndhBdDmlOGnIbTiZsY2rwlIYVCjDWbLEua3Sm/exec\")",
+      "Bash(curl -skL \"https://script.google.com/macros/s/AKfycbzVBngumd59INo9usb04xHnUirt6I6ndhBdDmlOGnIbTiZsY2rwlIYVCjDWbLEua3Sm/exec\")",
+      "Bash(git commit -m 'tennis: phone with country flag + mobile schedule line fix *)",
+      "Bash(git commit -m 'tennis: remove em dash in prize text, wrap to new line *)",
+      "Bash(git commit -m 'tennis: replace all French text with English *)",
+      "Bash(git commit -m 'tennis: remove comma in prize text *)"
     ]
   }
 }
