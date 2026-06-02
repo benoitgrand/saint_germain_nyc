@@ -6,6 +6,7 @@
 <title>Saint Germain Open — Tennis 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/css/intlTelInput.css">
 
 <!--
   ══════════════════════════════════════════════════════════════════════
@@ -604,6 +605,42 @@
   .form-message.success { color: #7bc47b; }
   .form-message.error   { color: #c47b7b; }
 
+  /* ── INTL-TEL-INPUT (phone field) ── */
+  .iti { width: 100%; }
+  .iti__selected-country {
+    background: rgba(247,243,236,0.05);
+    border-right: 1px solid rgba(201,169,110,0.25);
+    padding: 0 0.65rem;
+    gap: 0.35rem;
+  }
+  .iti--separate-dial-code .iti__selected-dial-code {
+    color: rgba(247,243,236,0.55);
+    font-family: 'Jost', sans-serif;
+    font-size: 0.78rem; font-weight: 300;
+  }
+  .iti__dropdown-content {
+    background: #1a2a38;
+    border: 1px solid rgba(201,169,110,0.3);
+    border-radius: 0;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .iti__search-input {
+    background: rgba(247,243,236,0.07) !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(201,169,110,0.2) !important;
+    color: var(--cream) !important;
+    font-family: 'Jost', sans-serif !important;
+    font-size: 0.78rem !important;
+    padding: 0.5rem 0.8rem !important;
+    width: 100%;
+  }
+  .iti__search-input::placeholder { color: rgba(247,243,236,0.25) !important; }
+  .iti__country { padding: 0.4rem 0.8rem; }
+  .iti__country:hover, .iti__country.iti__highlight { background: rgba(201,169,110,0.1) !important; }
+  .iti__country-name { color: rgba(247,243,236,0.7); font-family: 'Jost', sans-serif; font-size: 0.74rem; }
+  .iti__dial-code { color: var(--gold); font-size: 0.72rem; }
+  .iti__divider { border-color: rgba(201,169,110,0.15) !important; }
+
   /* ── LOADING ── */
   .loading-state {
     grid-column: 1 / -1;
@@ -730,11 +767,18 @@
     .schedule-section, .form-section { padding: 5rem 1.5rem; }
     .format-grid { grid-template-columns: 1fr 1fr; gap: 0.8rem; }
     .format-card { padding: 1.5rem 1rem; }
-    .schedule-track { grid-template-columns: 1fr; gap: 0; padding-left: 1.5rem; border-left: 1px solid rgba(201,169,110,0.25); }
+    .schedule-track { grid-template-columns: 1fr; gap: 0; padding-left: 1.5rem; }
     .schedule-track::before { display: none; }
     .schedule-phase { align-items: flex-start; text-align: left; margin-bottom: 2.5rem; position: relative; }
     .schedule-phase:last-child { margin-bottom: 0; }
-    .phase-dot { position: absolute; left: -1.5rem; top: 50%; margin-bottom: 0; transform: translateX(-50%) translateY(-50%); }
+    .schedule-phase::after {
+      content: ''; position: absolute;
+      left: -1.5rem; transform: translateX(-50%);
+      top: 50%; height: calc(100% + 2.5rem);
+      width: 1px; background: rgba(201,169,110,0.25);
+    }
+    .schedule-phase:last-child::after { display: none; }
+    .phase-dot { position: absolute; left: -1.5rem; top: 50%; margin-bottom: 0; transform: translateX(-50%) translateY(-50%); z-index: 1; }
     .logistics-grid { grid-template-columns: 1fr; gap: 3rem; }
     .tournaments-grid { grid-template-columns: 1fr; }
     .slots-grid { grid-template-columns: 1fr; }
@@ -1063,8 +1107,8 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="input-phone">Phone number</label>
-          <input class="form-input" type="tel" id="input-phone" placeholder="+1 212 000 0000" autocomplete="tel">
+          <label class="form-label" for="input-phone">Phone number *</label>
+          <input class="form-input" type="tel" id="input-phone" autocomplete="tel">
         </div>
 
         <div class="form-group">
@@ -1191,6 +1235,7 @@
   <div class="footer-copy" style="border-top: none; padding-top: 0.5rem; opacity: 0.45;">Site designed & developed by Benoît Grand</div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@23/build/js/intlTelInputWithUtils.js"></script>
 <script>
 // ── CONFIG ── Replace with your deployed Google Apps Script URL ──────
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzVBngumd59INo9usb04xHnUirt6I6ndhBdDmlOGnIbTiZsY2rwlIYVCjDWbLEua3Sm/exec';
@@ -1222,9 +1267,16 @@ const DAYS = [
 
 // ── STATE ────────────────────────────────────────────────────────────
 let registrations = [];
+let iti = null;
 
 // ── BOOT ─────────────────────────────────────────────────────────────
 (async function init() {
+  iti = intlTelInput(document.getElementById('input-phone'), {
+    initialCountry: 'us',
+    preferredCountries: ['us', 'fr'],
+    separateDialCode: true,
+    autoPlaceholder: 'aggressive',
+  });
   await loadData();
   renderSlots();
   setupForm();
@@ -1297,7 +1349,7 @@ function setupForm() {
     const firstName  = document.getElementById('input-firstname').value.trim();
     const lastName   = document.getElementById('input-lastname').value.trim();
     const gender     = document.querySelector('input[name="gender"]:checked')?.value;
-    const phone      = document.getElementById('input-phone').value.trim();
+    const phone      = iti ? iti.getNumber() : document.getElementById('input-phone').value.trim();
     const experience = document.getElementById('input-experience').value;
     const ranking    = document.getElementById('input-ranking').value.trim();
     const slots      = [...document.querySelectorAll('input[name="slots"]:checked')].map(c => c.value);
@@ -1306,6 +1358,11 @@ function setupForm() {
 
     if (!firstName || !lastName || !gender || !experience || !slots.length) {
       msg.textContent = '✗ Please fill in all required fields and select at least one slot.';
+      msg.className = 'form-message error';
+      return;
+    }
+    if (!phone || (iti && !iti.isValidNumber())) {
+      msg.textContent = '✗ Please enter a valid phone number.';
       msg.className = 'form-message error';
       return;
     }
