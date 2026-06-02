@@ -605,6 +605,18 @@
   .form-message.success { color: #7bc47b; }
   .form-message.error   { color: #c47b7b; }
 
+  /* ── FIELD ERRORS ── */
+  .field-error {
+    font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: #c47b7b; margin-top: 0.25rem;
+  }
+  .form-group.has-error .form-label { color: #c47b7b; }
+  .form-group.has-error .form-input,
+  .form-group.has-error .form-select { border-color: rgba(180,100,100,0.65); }
+  .form-group.has-error .iti { outline: 1px solid rgba(180,100,100,0.65); outline-offset: -1px; }
+  .form-group.has-error .status-label { border-color: rgba(180,100,100,0.45); }
+  .form-group.has-error .slot-form-day { border-color: rgba(180,100,100,0.4); }
+
   /* ── INTL-TEL-INPUT (phone field) ── */
   .iti { width: 100%; }
   .iti__selected-country {
@@ -1341,10 +1353,47 @@ function renderSlots() {
   setupReveal();
 }
 
+// ── FIELD VALIDATION HELPERS ─────────────────────────────────────────
+function clearErrors() {
+  document.querySelectorAll('.form-group.has-error').forEach(g => {
+    g.classList.remove('has-error');
+    g.querySelector('.field-error')?.remove();
+  });
+}
+
+function markError(el, message) {
+  const group = el.closest('.form-group');
+  if (!group || group.classList.contains('has-error')) return;
+  group.classList.add('has-error');
+  const span = document.createElement('span');
+  span.className = 'field-error';
+  span.textContent = message;
+  group.appendChild(span);
+}
+
 // ── FORM SUBMIT ───────────────────────────────────────────────────────
 function setupForm() {
+  // Clear error on interaction
+  document.getElementById('availability-form').querySelectorAll('input, select').forEach(el => {
+    el.addEventListener('change', () => {
+      const group = el.closest('.form-group');
+      if (group) {
+        group.classList.remove('has-error');
+        group.querySelector('.field-error')?.remove();
+      }
+    });
+    el.addEventListener('input', () => {
+      const group = el.closest('.form-group');
+      if (group) {
+        group.classList.remove('has-error');
+        group.querySelector('.field-error')?.remove();
+      }
+    });
+  });
+
   document.getElementById('availability-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    clearErrors();
 
     const firstName  = document.getElementById('input-firstname').value.trim();
     const lastName   = document.getElementById('input-lastname').value.trim();
@@ -1355,15 +1404,20 @@ function setupForm() {
     const slots      = [...document.querySelectorAll('input[name="slots"]:checked')].map(c => c.value);
 
     const msg = document.getElementById('form-message');
+    msg.textContent = '';
+    msg.className = 'form-message';
 
-    if (!firstName || !lastName || !gender || !experience || !slots.length) {
-      msg.textContent = '✗ Please fill in all required fields and select at least one slot.';
-      msg.className = 'form-message error';
-      return;
-    }
-    if (!phone || (iti && !iti.isValidNumber())) {
-      msg.textContent = '✗ Please enter a valid phone number.';
-      msg.className = 'form-message error';
+    let hasErrors = false;
+    if (!firstName)   { markError(document.getElementById('input-firstname'), 'Required'); hasErrors = true; }
+    if (!lastName)    { markError(document.getElementById('input-lastname'),  'Required'); hasErrors = true; }
+    if (!gender)      { markError(document.getElementById('gender-h'),        'Please select'); hasErrors = true; }
+    if (!phone)       { markError(document.getElementById('input-phone'),     'Required'); hasErrors = true; }
+    else if (iti && !iti.isValidNumber()) { markError(document.getElementById('input-phone'), 'Invalid number'); hasErrors = true; }
+    if (!experience)  { markError(document.getElementById('input-experience'),'Required'); hasErrors = true; }
+    if (!slots.length){ markError(document.querySelector('input[name="slots"]'), 'Select at least one slot'); hasErrors = true; }
+
+    if (hasErrors) {
+      document.querySelector('.form-group.has-error')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
