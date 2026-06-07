@@ -20,12 +20,11 @@
       E: Phone | F: Experience | G: Ranking | H: Slots (comma-separated)
 
     Slots reference:
-      s1  = Tue Jun 16  18:00-20:00    s2  = Wed Jun 17  18:00-20:00
-      s3  = Thu Jun 18  18:00-20:00    s4  = Fri Jun 19  18:00-20:00
-      s5  = Sat Jun 20  10:00-12:00    s6  = Sat Jun 20  12:00-14:00
-      s7  = Sat Jun 20  14:00-16:00    s8  = Sat Jun 20  16:00-18:00
-      s9  = Sun Jun 21  10:00-12:00    s10 = Sun Jun 21  12:00-14:00
-      s11 = Sun Jun 21  14:00-16:00    s12 = Sun Jun 21  16:00-18:00
+      s1  = Tue Jun 16  18:00-20:00    s2  = Thu Jun 18  18:00-20:00
+      s3  = Sat Jun 20  10:00-12:00    s4  = Sat Jun 20  12:00-14:00
+      s6  = Sat Jun 20  14:00-16:00    s7  = Sat Jun 20  16:00-18:00
+      s9  = Sat Jun 20  18:00-20:00
+      s10 = Sun Jun 21  10:00-12:00    s11 = Sun Jun 21  12:00-14:00
 
   STEP 2 — Open Extensions → Apps Script, paste this code:
 
@@ -938,7 +937,7 @@
         <div class="phase-dot"></div>
         <div class="phase-number">Quarter Finals</div>
         <div class="phase-name">Quarter<br><em>Finals</em></div>
-        <div class="phase-date">June 22–26</div>
+        <div class="phase-date">June 21–25</div>
       </div>
 
       <div class="schedule-phase reveal">
@@ -972,17 +971,17 @@
         <div class="time-slot">
           <svg class="time-slot-icon" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
           <div>
-            <div class="time-slot-label">Weekday Evenings (Tue–Fri)</div>
+            <div class="time-slot-label">Weekday Evenings (Tue &amp; Thu)</div>
             <div class="time-slot-value">6:00 PM – 8:00 PM</div>
-            <div class="time-slot-note">One slot per weekday evening during the first round (June 16–19).</div>
+            <div class="time-slot-note">One evening slot on Tuesday June 16 and Thursday June 18.</div>
           </div>
         </div>
         <div class="time-slot">
           <svg class="time-slot-icon" width="16" height="16" viewBox="0 0 24 24"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/></svg>
           <div>
             <div class="time-slot-label">Weekend (Sat–Sun)</div>
-            <div class="time-slot-value">10:00 AM – 6:00 PM</div>
-            <div class="time-slot-note">Four 2-hour slots: 10–12, 12–14, 14–16, 16–18 on Saturday June 20 &amp; Sunday June 21.</div>
+            <div class="time-slot-value">10:00 AM – 8:00 PM</div>
+            <div class="time-slot-note">Saturday June 20: five 2-hour slots from 10–12 through 18–20. Sunday June 21: 10–12 &amp; 12–14.</div>
           </div>
         </div>
       </div>
@@ -1152,7 +1151,7 @@
             </div>
 
             <div class="slot-form-day">
-              <div class="slot-form-day-label">Wed · Jun 17</div>
+              <div class="slot-form-day-label">Thu · Jun 18</div>
               <div class="slot-form-chips">
                 <input class="slot-checkbox" type="checkbox" name="slots" id="s2" value="s2">
                 <label class="slot-chip-label" for="s2">18:00–20:00</label>
@@ -1160,46 +1159,28 @@
             </div>
 
             <div class="slot-form-day">
-              <div class="slot-form-day-label">Thu · Jun 18</div>
-              <div class="slot-form-chips">
-                <input class="slot-checkbox" type="checkbox" name="slots" id="s3" value="s3">
-                <label class="slot-chip-label" for="s3">18:00–20:00</label>
-              </div>
-            </div>
-
-            <div class="slot-form-day">
-              <div class="slot-form-day-label">Fri · Jun 19</div>
-              <div class="slot-form-chips">
-                <input class="slot-checkbox" type="checkbox" name="slots" id="s4" value="s4">
-                <label class="slot-chip-label" for="s4">18:00–20:00</label>
-              </div>
-            </div>
-
-            <div class="slot-form-day">
               <div class="slot-form-day-label">Sat · Jun 20</div>
               <div class="slot-form-chips">
-                <input class="slot-checkbox" type="checkbox" name="slots" id="s5" value="s5">
-                <label class="slot-chip-label" for="s5">10:00–12:00</label>
+                <input class="slot-checkbox" type="checkbox" name="slots" id="s3" value="s3">
+                <label class="slot-chip-label" for="s3">10:00–12:00</label>
+                <input class="slot-checkbox" type="checkbox" name="slots" id="s4" value="s4">
+                <label class="slot-chip-label" for="s4">12:00–14:00</label>
                 <input class="slot-checkbox" type="checkbox" name="slots" id="s6" value="s6">
-                <label class="slot-chip-label" for="s6">12:00–14:00</label>
+                <label class="slot-chip-label" for="s6">14:00–16:00</label>
                 <input class="slot-checkbox" type="checkbox" name="slots" id="s7" value="s7">
-                <label class="slot-chip-label" for="s7">14:00–16:00</label>
-                <input class="slot-checkbox" type="checkbox" name="slots" id="s8" value="s8">
-                <label class="slot-chip-label" for="s8">16:00–18:00</label>
+                <label class="slot-chip-label" for="s7">16:00–18:00</label>
+                <input class="slot-checkbox" type="checkbox" name="slots" id="s9" value="s9">
+                <label class="slot-chip-label" for="s9">18:00–20:00</label>
               </div>
             </div>
 
             <div class="slot-form-day">
               <div class="slot-form-day-label">Sun · Jun 21</div>
               <div class="slot-form-chips">
-                <input class="slot-checkbox" type="checkbox" name="slots" id="s9" value="s9">
-                <label class="slot-chip-label" for="s9">10:00–12:00</label>
                 <input class="slot-checkbox" type="checkbox" name="slots" id="s10" value="s10">
-                <label class="slot-chip-label" for="s10">12:00–14:00</label>
+                <label class="slot-chip-label" for="s10">10:00–12:00</label>
                 <input class="slot-checkbox" type="checkbox" name="slots" id="s11" value="s11">
-                <label class="slot-chip-label" for="s11">14:00–16:00</label>
-                <input class="slot-checkbox" type="checkbox" name="slots" id="s12" value="s12">
-                <label class="slot-chip-label" for="s12">16:00–18:00</label>
+                <label class="slot-chip-label" for="s11">12:00–14:00</label>
               </div>
             </div>
 
@@ -1255,26 +1236,21 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzVBngumd59INo9
 // ── SLOT DEFINITIONS ─────────────────────────────────────────────────
 const SLOTS = [
   { id: 's1',  day: 'Tuesday · June 16',   time: '18:00–20:00' },
-  { id: 's2',  day: 'Wednesday · June 17', time: '18:00–20:00' },
-  { id: 's3',  day: 'Thursday · June 18',  time: '18:00–20:00' },
-  { id: 's4',  day: 'Friday · June 19',    time: '18:00–20:00' },
-  { id: 's5',  day: 'Saturday · June 20',  time: '10:00–12:00' },
-  { id: 's6',  day: 'Saturday · June 20',  time: '12:00–14:00' },
-  { id: 's7',  day: 'Saturday · June 20',  time: '14:00–16:00' },
-  { id: 's8',  day: 'Saturday · June 20',  time: '16:00–18:00' },
-  { id: 's9',  day: 'Sunday · June 21',    time: '10:00–12:00' },
-  { id: 's10', day: 'Sunday · June 21',    time: '12:00–14:00' },
-  { id: 's11', day: 'Sunday · June 21',    time: '14:00–16:00' },
-  { id: 's12', day: 'Sunday · June 21',    time: '16:00–18:00' },
+  { id: 's2',  day: 'Thursday · June 18',  time: '18:00–20:00' },
+  { id: 's3',  day: 'Saturday · June 20',  time: '10:00–12:00' },
+  { id: 's4',  day: 'Saturday · June 20',  time: '12:00–14:00' },
+  { id: 's6',  day: 'Saturday · June 20',  time: '14:00–16:00' },
+  { id: 's7',  day: 'Saturday · June 20',  time: '16:00–18:00' },
+  { id: 's9',  day: 'Saturday · June 20',  time: '18:00–20:00' },
+  { id: 's10', day: 'Sunday · June 21',    time: '10:00–12:00' },
+  { id: 's11', day: 'Sunday · June 21',    time: '12:00–14:00' },
 ];
 
 const DAYS = [
   { label: 'Tuesday · June 16',   slots: ['s1'] },
-  { label: 'Wednesday · June 17', slots: ['s2'] },
-  { label: 'Thursday · June 18',  slots: ['s3'] },
-  { label: 'Friday · June 19',    slots: ['s4'] },
-  { label: 'Saturday · June 20',  slots: ['s5','s6','s7','s8'] },
-  { label: 'Sunday · June 21',    slots: ['s9','s10','s11','s12'] },
+  { label: 'Thursday · June 18',  slots: ['s2'] },
+  { label: 'Saturday · June 20',  slots: ['s3','s4','s6','s7','s9'] },
+  { label: 'Sunday · June 21',    slots: ['s10','s11'] },
 ];
 
 // ── STATE ────────────────────────────────────────────────────────────
@@ -1313,11 +1289,11 @@ async function loadData() {
 
 function useDemoData() {
   registrations = [
-    { firstName: 'Sophie',  lastName: 'M.', gender: 'F', experience: '4-6', ranking: '4.0 NTRP', slots: ['s1','s5','s6','s9']              },
-    { firstName: 'Antoine', lastName: 'D.', gender: 'H', experience: '7+',  ranking: '30/2 FFT', slots: ['s2','s3','s7','s8','s10']         },
-    { firstName: 'Camille', lastName: 'R.', gender: 'F', experience: '2-3', ranking: '4.5 NTRP', slots: ['s1','s2','s9','s11']              },
-    { firstName: 'Pierre',  lastName: 'L.', gender: 'H', experience: '7+',  ranking: 'UTR 8.2',  slots: ['s4','s5','s6','s12']             },
-    { firstName: 'Emma',    lastName: 'W.', gender: 'F', experience: '4-6', ranking: '15/4 FFT', slots: ['s3','s7','s8','s11']             },
+    { firstName: 'Sophie',  lastName: 'M.', gender: 'F', experience: '4-6', ranking: '4.0 NTRP', slots: ['s1','s3','s4','s10']             },
+    { firstName: 'Antoine', lastName: 'D.', gender: 'H', experience: '7+',  ranking: '30/2 FFT', slots: ['s2','s6','s7','s11']             },
+    { firstName: 'Camille', lastName: 'R.', gender: 'F', experience: '2-3', ranking: '4.5 NTRP', slots: ['s1','s10','s11']                 },
+    { firstName: 'Pierre',  lastName: 'L.', gender: 'H', experience: '7+',  ranking: 'UTR 8.2',  slots: ['s3','s4','s9']                   },
+    { firstName: 'Emma',    lastName: 'W.', gender: 'F', experience: '4-6', ranking: '15/4 FFT', slots: ['s2','s6','s7','s9']              },
   ];
   document.getElementById('setup-banner').classList.add('visible');
 }
