@@ -31,7 +31,8 @@
       "Bash(git commit -m 'tennis: phone with country flag + mobile schedule line fix *)",
       "Bash(git commit -m 'tennis: remove em dash in prize text, wrap to new line *)",
       "Bash(git commit -m 'tennis: replace all French text with English *)",
-      "Bash(git commit -m 'tennis: remove comma in prize text *)"
+      "Bash(git commit -m 'tennis: remove comma in prize text *)",
+      "WebSearch"
     ]
   }
 }
