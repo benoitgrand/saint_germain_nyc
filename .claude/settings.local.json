@@ -31,7 +31,24 @@
       "Bash(git commit -m 'tennis: phone with country flag + mobile schedule line fix *)",
       "Bash(git commit -m 'tennis: remove em dash in prize text, wrap to new line *)",
       "Bash(git commit -m 'tennis: replace all French text with English *)",
-      "Bash(git commit -m 'tennis: remove comma in prize text *)"
+      "Bash(git commit -m 'tennis: remove comma in prize text *)",
+      "Bash(git commit -m 'tennis: per-field inline validation on Register *)",
+      "Bash(git commit -m 'tennis: remove FR from phone preferred countries, US only *)",
+      "Bash(python3 -m http.server 8743)",
+      "Read(//mnt/c/Users/bgdu6/**)",
+      "Bash(cmd.exe /c \"dir C:\\\\Users\\\\bgdu6\\\\Documents\\\\Saint_Germain_NYC\\\\site\")",
+      "PowerShell(Get-Job *)",
+      "Bash(base64 -w0 draw-2026.jpeg)",
+      "Read(//tmp/**)",
+      "Bash(rm -f _section.html _b64.txt)",
+      "Bash(python -c ' *)",
+      "Bash(start *)",
+      "Bash('/c/Program Files/Google/Chrome/Application/chrome.exe' --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=3000 --window-size=1440,900 --screenshot=/c/Users/bgdu6/Documents/Saint_Germain_NYC/site/runclub/_shot_hero.png file:///C:/Users/bgdu6/Documents/Saint_Germain_NYC/site/runclub/index.html)",
+      "Bash('/c/Program Files/Google/Chrome/Application/chrome.exe' --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=3000 --window-size=1440,3400 --screenshot=/c/Users/bgdu6/Documents/Saint_Germain_NYC/site/runclub/_shot_full.png file:///C:/Users/bgdu6/Documents/Saint_Germain_NYC/site/runclub/index.html)",
+      "Bash('/c/Program Files/Google/Chrome/Application/chrome.exe' --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=4000 --window-size=1440,2000 --screenshot=/c/Users/bgdu6/Documents/Saint_Germain_NYC/site/runclub/_shot_lower.png 'file:///C:/Users/bgdu6/Documents/Saint_Germain_NYC/site/runclub/index.html#routes')",
+      "Bash(python *)",
+      "Bash('/c/Program Files/Google/Chrome/Application/chrome.exe' --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=2000 --window-size=1440,3200 --screenshot=/c/Users/bgdu6/Documents/Saint_Germain_NYC/site/runclub/_shot_page.png file:///C:/Users/bgdu6/Documents/Saint_Germain_NYC/site/runclub/_shot_tmp.html)",
+      "Bash('/c/Program Files/Google/Chrome/Application/chrome.exe' --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 --virtual-time-budget=2500 --window-size=1440,2600 --screenshot=/c/Users/bgdu6/Documents/Saint_Germain_NYC/site/runclub/_cta.png file:///C:/Users/bgdu6/Documents/Saint_Germain_NYC/site/runclub/_s.html)"
     ]
   }
 }
